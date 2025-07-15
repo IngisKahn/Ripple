@@ -1,0 +1,42 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.34607.79
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ripple.UI", "Ripple.UI\Ripple.UI.csproj", "{489703C9-EB2A-4BD7-B9C7-2D8B672FCEEB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ripple.ForceAtlas", "Ripple.ForceAtlas\Ripple.ForceAtlas.csproj", "{9D002955-F6D7-4BBF-AEC9-F6DAD2C21EBA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A28B16EC-3241-4BBA-8725-760DEDF7FDF5}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParticleLife.Core", "ParticleLife.Core\ParticleLife.Core.csproj", "{37D42AC3-48B9-48B4-88E3-DC479DB2194F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{489703C9-EB2A-4BD7-B9C7-2D8B672FCEEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{489703C9-EB2A-4BD7-B9C7-2D8B672FCEEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{489703C9-EB2A-4BD7-B9C7-2D8B672FCEEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{489703C9-EB2A-4BD7-B9C7-2D8B672FCEEB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9D002955-F6D7-4BBF-AEC9-F6DAD2C21EBA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D002955-F6D7-4BBF-AEC9-F6DAD2C21EBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D002955-F6D7-4BBF-AEC9-F6DAD2C21EBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D002955-F6D7-4BBF-AEC9-F6DAD2C21EBA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37D42AC3-48B9-48B4-88E3-DC479DB2194F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37D42AC3-48B9-48B4-88E3-DC479DB2194F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37D42AC3-48B9-48B4-88E3-DC479DB2194F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37D42AC3-48B9-48B4-88E3-DC479DB2194F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {54A45FF0-4411-431F-B9A8-5DF9869B4FD5}
+	EndGlobalSection
+EndGlobal

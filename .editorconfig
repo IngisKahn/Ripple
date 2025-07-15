@@ -1,0 +1,10 @@
+﻿[*.{cs,vb}]
+
+# IDE0009: Member access should be qualified.
+dotnet_style_qualification_for_property = true
+
+# IDE0009: Member access should be qualified.
+dotnet_style_qualification_for_event = true
+
+# IDE0009: Member access should be qualified.
+dotnet_style_qualification_for_field = true
