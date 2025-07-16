@@ -69,6 +69,7 @@ partial class Form1
         this.loadButton.Size = new Size(37, 22);
         this.loadButton.Text = "Load";
         this.loadButton.ToolTipText = "Load";
+        this.loadButton.Click += this.loadButton_Click;
         // 
         // saveButton
         // 

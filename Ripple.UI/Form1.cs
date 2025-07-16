@@ -20,7 +20,7 @@ public partial class Form1 : Form
     [LibraryImport("user32.dll", EntryPoint = "PeekMessageA")]
     private static partial int PeekMessage(out NativeMessage message, IntPtr window, uint filterMin, uint filterMax, uint remove);
 
-    private readonly Graph graph = new();
+    private Graph graph = new();
 
     private Node? selected;
     private SizeF mid;
@@ -80,7 +80,7 @@ public partial class Form1 : Form
         var edges = this.graph.Edges;
 
         const int planckLength = 10;
-        const int n = 11;
+        const int n = 22;
         const double scale = 1;
         const double expansion = 1.41;
         var θ = Math.Pow(planckLength / 2d / scale, 1 / expansion);
@@ -109,7 +109,7 @@ public partial class Form1 : Form
         }
         graph.ForceAtlas2.IsStrongGravityMode = false;
         graph.ForceAtlas2.Gravity = 1.1;
-        graph.ForceAtlas2.IsLogMode = false;
+        graph.ForceAtlas2.IsLogMode = true;
         graph.ForceAtlas2.Initialize();
         graph.ForceAtlas2.RegionStep();
         graph.ForceAtlas2.IsBarnesHutOptimize = true;
@@ -272,12 +272,33 @@ public partial class Form1 : Form
             FileName = Path.Combine(this.appSettings.LastAccessedPath, "graph.ripple")
         };
 
-        if (saveFileDialog.ShowDialog() != DialogResult.OK) 
+        if (saveFileDialog.ShowDialog() != DialogResult.OK)
             return;
         using var fileStream = new FileStream(saveFileDialog.FileName, FileMode.Create, FileAccess.Write);
         using var writer = new BinaryWriter(fileStream);
         this.graph.Write(writer);
-        this.appSettings.LastAccessedPath = Path.GetDirectoryName(saveFileDialog.FileName) ?? string.Empty;
+        this.SaveLastAccessedPath(Path.GetDirectoryName(saveFileDialog.FileName) ?? string.Empty);
+    }
+
+    private void loadButton_Click(object sender, EventArgs e)
+    {
+        var openFileDialog = new OpenFileDialog
+        {
+            Filter = "Ripple Graph|*.ripple",
+            Title = "Load Ripple Graph",
+            FileName = Path.Combine(this.appSettings.LastAccessedPath, "graph.ripple")
+        };
+        if (openFileDialog.ShowDialog() != DialogResult.OK)
+            return;
+        using var fileStream = new FileStream(openFileDialog.FileName, FileMode.Open, FileAccess.Read);
+        using var reader = new BinaryReader(fileStream);
+        this.graph = Graph.Read(reader);
+        this.SaveLastAccessedPath(Path.GetDirectoryName(openFileDialog.FileName) ?? string.Empty);
+    }
+
+    private void SaveLastAccessedPath(string path)
+    {
+        this.appSettings.LastAccessedPath = path;
         using var settingsFile = IsolatedStorageFile.GetUserStoreForAssembly().OpenFile("settings.data", FileMode.Create, FileAccess.Write);
         using var settingsWriter = new BinaryWriter(settingsFile);
         settingsWriter.Write(this.appSettings.LastAccessedPath);
