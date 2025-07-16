@@ -6,13 +6,19 @@ public record Graph
     private Graph(IEnumerable<Node> nodes, IEnumerable<Edge> edges)
     {
         this.nodes = nodes.ToDictionary(n => n.Id);
-        this.Edges = edges.ToList();
+        this.edges = edges.ToList();
+        foreach (var edge in this.Edges)
+        {
+            this.nodes[edge.Source.Id].Degree++;
+            this.nodes[edge.Target.Id].Degree++;
+        }
         this.ForceAtlas2 = new(this);
     }
 
     private readonly Dictionary<uint, Node> nodes = [];
+    private readonly List<Edge> edges = [];
     public Dictionary<uint, Node>.ValueCollection Nodes => this.nodes.Values;
-    public IList<Edge> Edges { get; init; } = [];
+    public IReadOnlyList<Edge> Edges => this.edges;
     public ForceAtlas2 ForceAtlas2 { get; }
 
     public Node AddNode(double x, double y, string? label = null)
@@ -20,6 +26,17 @@ public record Graph
         var node = new Node(x, y, label);
         this.nodes[node.Id] = node;
         return node;
+    }
+
+    public Edge AddEdge(Node source, Node target, double weight = .00001)
+    {
+        if (source == target)
+            throw new ArgumentException("Source and target nodes cannot be the same.");
+        var edge = new Edge(source, target) { Weight = weight };
+        this.edges.Add(edge);
+        source.Degree++;
+        target.Degree++;
+        return edge;
     }
 
     public void Write(BinaryWriter writer)
@@ -46,7 +63,7 @@ public record Graph
         for (var i = 0; i < edgeCount; i++)
         {
             var edge = Edge.Read(reader, nodes.ToDictionary(n => n.Id));
-            edges.Add(edge);
+            edges.Add(edge);            
         }
         return new(nodes, edges);
     }

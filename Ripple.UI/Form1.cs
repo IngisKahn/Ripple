@@ -63,29 +63,35 @@ public partial class Form1 : Form
     {
         this.DoubleBuffered = true;
 
-        var nodes = this.graph.Nodes;
         var edges = this.graph.Edges;
 
         const int planckLength = 10;
-        const int n = 32;
+        const int n = 11;
         const double scale = 1;
         const double expansion = 1.41;
         var θ = Math.Pow(planckLength / 2d / scale, 1 / expansion);
+        Node? aNew = null, bNew = null;
         for (var i = 0; i < n; i++)
         {
             var radius = scale * Math.Pow(θ, expansion);
             var x = radius * Math.Cos(θ);
             var y = radius * Math.Sin(θ);
             θ += planckLength / radius;
-            nodes.Add(new(x, y) { Degree = 2 });
-            nodes.Add(new(-x, -y) { Degree = 2 });
+            var aOld = aNew;
+            var bOld = bNew;
+            aNew = this.graph.AddNode(x, y, $"A{i}");
+            bNew = this.graph.AddNode(-x, -y, $"B{i}");
             if (i > 0)
             {
-                edges.Add(new(nodes[2 * i - 1], nodes[2 * i + 1]) { Weight = 10 });
-                edges.Add(new(nodes[2 * i], nodes[2 * (i - 1)]) { Weight = 10 });
+                this.graph.AddEdge(aOld!, aNew, 10);
+                this.graph.AddEdge(bOld!, bNew, 10);
             }
             else
-                edges.Add(new(nodes[0], nodes[1]) { Weight = 10 });
+            {
+                // connect first two nodes
+                this.graph.AddEdge(aNew, bNew, 10);
+            }
+
         }
         graph.ForceAtlas2.IsStrongGravityMode = false;
         graph.ForceAtlas2.Gravity = 1.1;
@@ -112,6 +118,7 @@ public partial class Form1 : Form
     {
         if (this.selected == null)
         {
+            // dumb, use spatial index from ForceAtlas2
             this.mouseNode = graph.Nodes.FirstOrDefault(n =>
             {
                 var p = NodeToPointF(n);
