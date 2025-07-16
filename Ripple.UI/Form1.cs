@@ -47,7 +47,7 @@ public partial class Form1 : Form
             case 'r':
                 this.drawRegions = !this.drawRegions;
                 break;
-            case 'n':
+            case 'n':https://tms-outsource.com/blog/posts/how-to-add-image-to-android-studio/
                 this.drawNodes = !this.drawNodes;
                 break;
             case 'e':
@@ -180,36 +180,22 @@ public partial class Form1 : Form
                     var thisY = (float)(region.MassCenterY + this.mid.Height);
                     var size = (float)region.Size;
                     bg.DrawEllipse(Pens.LightGray, thisX - size * .5f, thisY - size * .5f, size, size);
-                    if (region.TopLeft is {Count: > 0})
-                    {
-                        var rx = (float)(region.TopLeft.MassCenterX + this.mid.Width);
-                        var ry = (float)(region.TopLeft.MassCenterY + this.mid.Height);
-                        bg.DrawLine(Pens.LightPink, thisX, thisY, rx, ry);
-                        regions.Enqueue(region.TopLeft);
-                    }
 
-                    if (region.TopRight is { Count: > 0 })
-                    {
-                        var rx = (float)(region.TopRight.MassCenterX + this.mid.Width);
-                        var ry = (float)(region.TopRight.MassCenterY + this.mid.Height);
-                        bg.DrawLine(Pens.LightPink, thisX, thisY, rx, ry);
-                        regions.Enqueue(region.TopRight);
-                    }
+                    ProcessSubregion(region.TopLeft);
+                    ProcessSubregion(region.TopRight);
+                    ProcessSubregion(region.BottomLeft);
+                    ProcessSubregion(region.BottomRight);
 
-                    if (region.BottomLeft is { Count: > 0 })
-                    {
-                        var rx = (float)(region.BottomLeft.MassCenterX + this.mid.Width);
-                        var ry = (float)(region.BottomLeft.MassCenterY + this.mid.Height);
-                        bg.DrawLine(Pens.LightPink, thisX, thisY, rx, ry);
-                        regions.Enqueue(region.BottomLeft);
-                    }
+                    continue;
 
-                    if (region.BottomRight is { Count: > 0 })
+                    void ProcessSubregion(Region? r)
                     {
-                        var rx = (float)(region.BottomRight.MassCenterX + this.mid.Width);
-                        var ry = (float)(region.BottomRight.MassCenterY + this.mid.Height);
+                        if (r is not {Count: > 0}) 
+                            return;
+                        var rx = (float)(r.MassCenterX + this.mid.Width);
+                        var ry = (float)(r.MassCenterY + this.mid.Height);
                         bg.DrawLine(Pens.LightPink, thisX, thisY, rx, ry);
-                        regions.Enqueue(region.BottomRight);
+                        regions.Enqueue(r);
                     }
                 }
             }
@@ -251,7 +237,8 @@ public partial class Form1 : Form
         }
 
     }
-    PointF NodeToPointF(Node node) => new((float)node.X + mid.Width, (float)node.Y + mid.Height);
-    PointF NodeToPointOldF(Node node) => new((float)node.OldX + mid.Width, (float)node.OldY + mid.Height);
-    bool IsApplicationIdle() => PeekMessage(out _, IntPtr.Zero, 0, 0, 0) == 0;
+
+    private PointF NodeToPointF(Node node) => new((float)node.X + mid.Width, (float)node.Y + mid.Height);
+    private PointF NodeToPointOldF(Node node) => new((float)node.OldX + mid.Width, (float)node.OldY + mid.Height);
+    private bool IsApplicationIdle() => PeekMessage(out _, IntPtr.Zero, 0, 0, 0) == 0;
 }

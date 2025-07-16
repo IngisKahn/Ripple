@@ -32,15 +32,21 @@ public class Edge(Node source, Node target) : IParticle
     }
 
     public override string ToString() => $"{this.Source} -> {this.Target}";
-}
 
-public interface IParticle
-{
-    public double X { get; set; }
-    public double Y { get; set; }
-    public double Mass { get; set; }
+    public void Write(BinaryWriter writer)
+    {
+        writer.Write(this.Source.Id);
+        writer.Write(this.Target.Id);
+        writer.Write(this.Weight);
+    }
 
-    public double Dx { get; set; }
-    public double Dy { get; set; }
-    public double Size { get; set; }
+    public static Edge Read(BinaryReader reader, IReadOnlyDictionary<uint, Node> nodes)
+    {
+        var sourceId = reader.ReadUInt32();
+        var targetId = reader.ReadUInt32();
+        var weight = reader.ReadDouble();
+        var source = nodes[sourceId];
+        var target = nodes[targetId];
+        return new(source, target) { Weight = weight };
+    }
 }
