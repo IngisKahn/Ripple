@@ -1,5 +1,6 @@
 ﻿namespace Ripple.UI;
 
+using System.IO.IsolatedStorage;
 using ForceAtlas;
 using System.Runtime.InteropServices;
 
@@ -24,6 +25,8 @@ public partial class Form1 : Form
     private Node? selected;
     private SizeF mid;
 
+    private AppSettings appSettings;
+
     public Form1()
     {
         InitializeComponent();
@@ -32,6 +35,16 @@ public partial class Form1 : Form
         this.MouseUp += this.Form1_MouseUp;
         this.Load += this.Form1_Load;
         this.KeyPress += this.Form1_KeyPress;
+
+        using var settingsFile = IsolatedStorageFile.GetUserStoreForAssembly().OpenFile("settings.data", FileMode.OpenOrCreate, FileAccess.Read);
+        if (settingsFile.Length > 0)
+        {
+            using var reader = new BinaryReader(settingsFile);
+            this.appSettings = new(reader.ReadString());
+        }
+        else
+            this.appSettings = new(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
+
     }
 
     private void Form1_KeyPress(object? sender, KeyPressEventArgs e)
@@ -47,7 +60,8 @@ public partial class Form1 : Form
             case 'r':
                 this.drawRegions = !this.drawRegions;
                 break;
-            case 'n':https://tms-outsource.com/blog/posts/how-to-add-image-to-android-studio/
+            case 'n':
+            https://tms-outsource.com/blog/posts/how-to-add-image-to-android-studio/
                 this.drawNodes = !this.drawNodes;
                 break;
             case 'e':
@@ -153,7 +167,7 @@ public partial class Form1 : Form
 
     private void Application_Idle(object? sender, EventArgs e)
     {
-        using var g = CreateGraphics();
+        using var g = this.pictureBox1.CreateGraphics();
         using var b = new Bitmap((int)g.VisibleClipBounds.Width, (int)g.VisibleClipBounds.Height, g);
         using var bg = Graphics.FromImage(b);
         mid = g.VisibleClipBounds.Size * .5f;
@@ -197,7 +211,7 @@ public partial class Form1 : Form
 
                     void ProcessSubregion(Region? r)
                     {
-                        if (r is not {Count: > 0}) 
+                        if (r is not { Count: > 0 })
                             return;
                         var rx = (float)(r.MassCenterX + this.mid.Width);
                         var ry = (float)(r.MassCenterY + this.mid.Height);
@@ -248,4 +262,24 @@ public partial class Form1 : Form
     private PointF NodeToPointF(Node node) => new((float)node.X + mid.Width, (float)node.Y + mid.Height);
     private PointF NodeToPointOldF(Node node) => new((float)node.OldX + mid.Width, (float)node.OldY + mid.Height);
     private bool IsApplicationIdle() => PeekMessage(out _, IntPtr.Zero, 0, 0, 0) == 0;
+
+    private void saveButton_Click(object sender, EventArgs e)
+    {
+        var saveFileDialog = new SaveFileDialog
+        {
+            Filter = "Ripple Graph|*.ripple",
+            Title = "Save Ripple Graph",
+            FileName = Path.Combine(this.appSettings.LastAccessedPath, "graph.ripple")
+        };
+
+        if (saveFileDialog.ShowDialog() != DialogResult.OK) 
+            return;
+        using var fileStream = new FileStream(saveFileDialog.FileName, FileMode.Create, FileAccess.Write);
+        using var writer = new BinaryWriter(fileStream);
+        this.graph.Write(writer);
+        this.appSettings.LastAccessedPath = Path.GetDirectoryName(saveFileDialog.FileName) ?? string.Empty;
+        using var settingsFile = IsolatedStorageFile.GetUserStoreForAssembly().OpenFile("settings.data", FileMode.Create, FileAccess.Write);
+        using var settingsWriter = new BinaryWriter(settingsFile);
+        settingsWriter.Write(this.appSettings.LastAccessedPath);
+    }
 }
