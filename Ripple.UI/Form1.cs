@@ -24,17 +24,23 @@ public partial class Form1 : Form
 
     private Node? selected;
     private SizeF mid;
+    private PointF pan;
+    private float zoom = 1;
+
+    private PointF Transform(PointF point) => new((point.X * zoom + pan.X) + mid.Width, (point.Y * zoom + pan.Y) + mid.Height);
+    private PointF Transform(float x, float y) => new((x * zoom + pan.X) + mid.Width, (y * zoom + pan.Y) + mid.Height);
 
     private AppSettings appSettings;
 
     public Form1()
     {
         InitializeComponent();
-        this.MouseDown += this.Form1_MouseDown;
-        this.MouseMove += this.Form1_MouseMove;
-        this.MouseUp += this.Form1_MouseUp;
+        this.pictureBox1.MouseDown += this.Form1_MouseDown;
+        this.pictureBox1.MouseMove += this.Form1_MouseMove;
+        this.pictureBox1.MouseUp += this.Form1_MouseUp;
         this.Load += this.Form1_Load;
         this.KeyPress += this.Form1_KeyPress;
+        this.MouseWheel += OnMouseWheel;
 
         using var settingsFile = IsolatedStorageFile.GetUserStoreForAssembly().OpenFile("settings.data", FileMode.OpenOrCreate, FileAccess.Read);
         if (settingsFile.Length > 0)
@@ -61,7 +67,6 @@ public partial class Form1 : Form
                 this.drawRegions = !this.drawRegions;
                 break;
             case 'n':
-            https://tms-outsource.com/blog/posts/how-to-add-image-to-android-studio/
                 this.drawNodes = !this.drawNodes;
                 break;
             case 'e':
@@ -80,7 +85,7 @@ public partial class Form1 : Form
         var edges = this.graph.Edges;
 
         const int planckLength = 10;
-        const int n = 22;
+        const int n = 5;
         const double scale = 1;
         const double expansion = 1.41;
         var θ = Math.Pow(planckLength / 2d / scale, 1 / expansion);
@@ -97,19 +102,19 @@ public partial class Form1 : Form
             bNew = this.graph.AddNode(-x, -y, $"B{i}");
             if (i > 0)
             {
-                this.graph.AddEdge(aOld!, aNew, 10);
-                this.graph.AddEdge(bOld!, bNew, 10);
+                this.graph.AddEdge(aOld!, aNew, 1);
+                this.graph.AddEdge(bOld!, bNew, 1);
             }
             else
             {
                 // connect first two nodes
-                this.graph.AddEdge(aNew, bNew, 10);
+                this.graph.AddEdge(aNew, bNew, 1);
             }
 
         }
         graph.ForceAtlas2.IsStrongGravityMode = false;
         graph.ForceAtlas2.Gravity = 1.1;
-        graph.ForceAtlas2.IsLogMode = true;
+        graph.ForceAtlas2.IsLogMode = false;
         graph.ForceAtlas2.Initialize();
         graph.ForceAtlas2.RegionStep();
         graph.ForceAtlas2.IsBarnesHutOptimize = true;
@@ -121,6 +126,16 @@ public partial class Form1 : Form
         Application.Idle += Application_Idle;
     }
 
+    private void OnMouseWheel(object? s, MouseEventArgs e)
+    {
+        var lastZoom = this.zoom;
+        this.zoom += e.Delta / 1200f;
+        if (this.zoom < 0.1f) this.zoom = 0.1f;
+        if (this.zoom > 10f) this.zoom = 10f;
+        this.pan.X += (e.X - this.mid.Width) * (this.zoom - lastZoom);
+        this.pan.Y += (e.Y - this.mid.Height) * (this.zoom - lastZoom);
+    }
+
     private void Form1_MouseUp(object? sender, MouseEventArgs e)
     {
         if (this.selected != null && !wasSelectedFixed)
@@ -128,29 +143,52 @@ public partial class Form1 : Form
         this.selected = null;
     }
 
+    private PointF lastPos = new(0, 0);
+
     private void Form1_MouseMove(object? sender, MouseEventArgs e)
     {
+        if (e.Button == MouseButtons.Middle)
+        {
+            if (!this.isPanning)
+                return;
+            this.pan.X += e.X - lastPos.X;
+            this.pan.Y += e.Y - lastPos.Y;
+            lastPos = new(e.X, e.Y);
+            return;
+        }
+        lastPos = new(e.X, e.Y);
+
+        var mousePos = (PointF)e.Location;
+
+        var m = Transform(mousePos - mid);
         if (this.selected == null)
         {
             // dumb, use spatial index from ForceAtlas2
             this.mouseNode = graph.Nodes.FirstOrDefault(n =>
             {
                 var p = NodeToPointF(n);
-                return Math.Abs(p.X - e.X) < 3 && Math.Abs(p.Y - e.Y) < 3;
+                return Math.Abs(p.X - m.X) < 3 && Math.Abs(p.Y - m.Y) < 3;
             });
             return;
         }
 
-        this.selected.X = e.X - mid.Width;
-        this.selected.Y = e.Y - mid.Height;
+        this.selected.X = m.X;
+        this.selected.Y = m.Y;
         //this.graph.ForceAtlas2.RegionStep();
+        
     }
 
     private Node? mouseNode;
     private bool wasSelectedFixed;
+    private bool isPanning;
 
     private void Form1_MouseDown(object? sender, MouseEventArgs e)
     {
+        if (e.Button == MouseButtons.Middle)
+        {
+            this.isPanning = true;
+            return;
+        }
         this.selected = mouseNode;
         if (this.selected != null)
         {
@@ -178,15 +216,15 @@ public partial class Form1 : Form
 
             if (this.drawGrid)
             {
-                bg.DrawLine(Pens.Gray, mid.Width, -100 + mid.Height, mid.Width, 100 + mid.Height);
-                bg.DrawLine(Pens.Gray, -100 + mid.Width, mid.Height, 100 + mid.Width, mid.Height);
+                DrawLine(Pens.Gray, 0, -100, 0, 100);
+                DrawLine(Pens.Gray, -100, 0, 100, 0);
 
                 for (var i = 10; i < 100; i += 10)
                 {
-                    bg.DrawLine(Pens.LightGray, i + mid.Width, -100 + mid.Height, i + mid.Width, 100 + mid.Height);
-                    bg.DrawLine(Pens.LightGray, -100 + mid.Width, i + mid.Height, 100 + mid.Width, i + mid.Height);
-                    bg.DrawLine(Pens.LightGray, -i + mid.Width, -100 + mid.Height, -i + mid.Width, 100 + mid.Height);
-                    bg.DrawLine(Pens.LightGray, -100 + mid.Width, -i + mid.Height, 100 + mid.Width, -i + mid.Height);
+                    DrawLine(Pens.LightGray, i, -100, i, 100);
+                    DrawLine(Pens.LightGray, -100, i, 100, i);
+                    DrawLine(Pens.LightGray, -i, -100, -i, 100);
+                    DrawLine(Pens.LightGray, -100, -i, 100, -i);
                 }
             }
 
@@ -197,10 +235,11 @@ public partial class Form1 : Form
                 while (regions.Count > 0)
                 {
                     var region = regions.Dequeue();
-                    var thisX = (float)(region.MassCenterX + this.mid.Width);
-                    var thisY = (float)(region.MassCenterY + this.mid.Height);
-                    var size = (float)region.Size;
-                    bg.DrawEllipse(Pens.LightGray, thisX - size * .5f, thisY - size * .5f, size, size);
+                    var thisX = (float)(region.MassCenterX);
+                    var thisY = (float)(region.MassCenterY);
+                    var center = Transform(thisX, thisY);
+                    var size = (float)region.Size * this.zoom;
+                    bg.DrawEllipse(Pens.LightGray, center.X - size * .5f, center.Y - size * .5f, size, size);
 
                     ProcessSubregion(region.TopLeft);
                     ProcessSubregion(region.TopRight);
@@ -213,9 +252,9 @@ public partial class Form1 : Form
                     {
                         if (r is not { Count: > 0 })
                             return;
-                        var rx = (float)(r.MassCenterX + this.mid.Width);
-                        var ry = (float)(r.MassCenterY + this.mid.Height);
-                        bg.DrawLine(Pens.LightPink, thisX, thisY, rx, ry);
+                        var rx = (float)(r.MassCenterX);
+                        var ry = (float)(r.MassCenterY);
+                        DrawLine(Pens.LightPink, thisX, thisY, rx, ry);
                         regions.Enqueue(r);
                     }
                 }
@@ -253,14 +292,19 @@ public partial class Form1 : Form
                 var p = NodeToPointF(mouseNode);
                 bg.FillRectangle(mouseNode == selected ? Brushes.Blue : Brushes.Red, p.X - 3, p.Y - 3, 6, 6);
             }
+
+            bg.DrawString($"Pan: {pan.X:N2}, {pan.Y:N2} | Zoom: {zoom:N2} | LastPos: {lastPos.X:N2}, {lastPos.Y:N2} | Mid: {mid.Width:N2}, {mid.Height:N2}",
+                this.Font, Brushes.Black, 10, 10);
+
             g.DrawImageUnscaled(b, 0, 0);
             graph.ForceAtlas2.Step();
         }
-
+        return;
+        void DrawLine(Pen pen, float x1, float y1, float x2, float y2) => bg.DrawLine(pen, Transform(x1, y1), Transform(x2, y2));
     }
 
-    private PointF NodeToPointF(Node node) => new((float)node.X + mid.Width, (float)node.Y + mid.Height);
-    private PointF NodeToPointOldF(Node node) => new((float)node.OldX + mid.Width, (float)node.OldY + mid.Height);
+    private PointF NodeToPointF(Node node) => Transform(new((float)node.X, (float)node.Y));
+    private PointF NodeToPointOldF(Node node) => Transform(new((float)node.OldX, (float)node.OldY));
     private bool IsApplicationIdle() => PeekMessage(out _, IntPtr.Zero, 0, 0, 0) == 0;
 
     private void saveButton_Click(object sender, EventArgs e)
