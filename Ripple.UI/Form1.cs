@@ -172,8 +172,8 @@ public partial class Form1 : Form
             return;
         }
 
-        this.selected.X = m.X;
-        this.selected.Y = m.Y;
+        this.selected.X = m.X - mid.Width;
+        this.selected.Y = m.Y - mid.Height;
         //this.graph.ForceAtlas2.RegionStep();
         
     }
